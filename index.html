@@ -2,68 +2,117 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Minecraft Splash Text Generator</title>
+  <title>Minecraft Tools Hub</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #1e1e1e;
       color: white;
       text-align: center;
-      padding: 40px;
+      padding: 30px;
     }
 
-    input, select, button {
-      font-size: 16px;
+    button, input, select, textarea {
       padding: 10px;
-      margin: 10px;
-      width: 300px;
+      font-size: 16px;
+      margin: 5px;
+      width: 260px;
     }
 
-    button {
-      cursor: pointer;
+    .menu button {
+      width: 280px;
+      margin: 10px;
+    }
+
+    .tool {
+      display: none;
+      margin-top: 30px;
+    }
+
+    .tool.active {
+      display: block;
     }
   </style>
 </head>
 <body>
 
-  <h1>Minecraft Splash Text Generator</h1>
+  <h1>Minecraft Tools Hub</h1>
+  <p>Select a tool:</p>
 
-  <p>Enter your splash text (one per line):</p>
-  <textarea id="splashText" rows="5" style="width:300px;"></textarea>
+  <!-- MENU -->
+  <div class="menu">
+    <button onclick="showTool('splash')">Splash Text Generator</button>
+    <button onclick="showTool('coords')">Overworld ↔ Nether Converter</button>
+  </div>
 
-  <p>Select Minecraft version:</p>
-  <select id="mcVersion">
-    <option value="15">1.20–1.20.4</option>
-    <option value="12">1.19–1.19.4</option>
-    <option value="9">1.18–1.18.2</option>
-    <option value="8">1.17–1.17.1</option>
-  </select>
+  <!-- SPLASH TEXT TOOL -->
+  <div id="splash" class="tool">
+    <h2>Splash Text Generator</h2>
 
-  <br>
+    <p>Enter splash text (one per line):</p>
+    <textarea id="splashText" rows="5"></textarea>
 
-  <button onclick="generatePack()">Download Texture Pack</button>
+    <p>Minecraft version:</p>
+    <select id="mcVersion">
+      <option value="15">1.20+</option>
+      <option value="12">1.19</option>
+      <option value="9">1.18</option>
+      <option value="8">1.17</option>
+    </select>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <br><br>
+    <button onclick="generatePack()">Download Texture Pack</button>
+  </div>
+
+  <!-- COORDINATE CONVERTER -->
+  <div id="coords" class="tool">
+    <h2>Overworld ↔ Nether Converter</h2>
+
+    <p>X coordinate:</p>
+    <input id="x" type="number">
+
+    <p>Z coordinate:</p>
+    <input id="z" type="number">
+
+    <p>Conversion type:</p>
+    <select id="direction">
+      <option value="toNether">Overworld → Nether</option>
+      <option value="toOverworld">Nether → Overworld</option>
+    </select>
+
+    <br><br>
+    <button onclick="convertCoords()">Convert</button>
+
+    <h3 id="result"></h3>
+  </div>
 
   <script>
+    function showTool(id) {
+      document.querySelectorAll(".tool").forEach(tool => {
+        tool.classList.remove("active");
+      });
+      document.getElementById(id).classList.add("active");
+    }
+
     function generatePack() {
       const splashText = document.getElementById("splashText").value.trim();
       const packFormat = document.getElementById("mcVersion").value;
 
       if (!splashText) {
-        alert("Please enter at least one splash text!");
+        alert("Please enter splash text!");
         return;
       }
 
       const zip = new JSZip();
 
-      // Create splashes.txt
       zip.folder("assets")
         .folder("minecraft")
         .folder("texts")
         .file("splashes.txt", splashText);
 
-      // Create pack.mcmeta
       const mcmeta = {
         pack: {
           pack_format: Number(packFormat),
@@ -73,16 +122,38 @@
 
       zip.file("pack.mcmeta", JSON.stringify(mcmeta, null, 2));
 
-      // Generate ZIP
-      zip.generateAsync({ type: "blob" }).then(function(content) {
+      zip.generateAsync({ type: "blob" }).then(content => {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(content);
         a.download = "CustomSplashTextPack.zip";
         a.click();
       });
     }
+
+    function convertCoords() {
+      const x = Number(document.getElementById("x").value);
+      const z = Number(document.getElementById("z").value);
+      const direction = document.getElementById("direction").value;
+
+      if (isNaN(x) || isNaN(z)) {
+        alert("Please enter valid numbers!");
+        return;
+      }
+
+      let newX, newZ;
+
+      if (direction === "toNether") {
+        newX = x / 8;
+        newZ = z / 8;
+      } else {
+        newX = x * 8;
+        newZ = z * 8;
+      }
+
+      document.getElementById("result").textContent =
+        `Result: X=${Math.round(newX)}, Z=${Math.round(newZ)}`;
+    }
   </script>
 
 </body>
 </html>
-
