@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minecraft Splash Text Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    input, select, button {
+      font-size: 16px;
+      padding: 10px;
+      margin: 10px;
+      width: 300px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Minecraft Splash Text Generator</h1>
+
+  <p>Enter your splash text (one per line):</p>
+  <textarea id="splashText" rows="5" style="width:300px;"></textarea>
+
+  <p>Select Minecraft version:</p>
+  <select id="mcVersion">
+    <option value="15">1.20–1.20.4</option>
+    <option value="12">1.19–1.19.4</option>
+    <option value="9">1.18–1.18.2</option>
+    <option value="8">1.17–1.17.1</option>
+  </select>
+
+  <br>
+
+  <button onclick="generatePack()">Download Texture Pack</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    function generatePack() {
+      const splashText = document.getElementById("splashText").value.trim();
+      const packFormat = document.getElementById("mcVersion").value;
+
+      if (!splashText) {
+        alert("Please enter at least one splash text!");
+        return;
+      }
+
+      const zip = new JSZip();
+
+      // Create splashes.txt
+      zip.folder("assets")
+        .folder("minecraft")
+        .folder("texts")
+        .file("splashes.txt", splashText);
+
+      // Create pack.mcmeta
+      const mcmeta = {
+        pack: {
+          pack_format: Number(packFormat),
+          description: "Custom Splash Text Pack"
+        }
+      };
+
+      zip.file("pack.mcmeta", JSON.stringify(mcmeta, null, 2));
+
+      // Generate ZIP
+      zip.generateAsync({ type: "blob" }).then(function(content) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = "CustomSplashTextPack.zip";
+        a.click();
+      });
+    }
+  </script>
+
+</body>
+</html>
+
